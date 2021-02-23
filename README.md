@@ -3,14 +3,14 @@
 | [![Preview](https://github.com/jobobby04/TachiyomiSYPreview/workflows/Remote%20Dispatch%20Build%20App/badge.svg)](https://github.com/jobobby04/TachiyomiSYPreview/releases) | [![stable release](https://img.shields.io/github/release/jobobby04/tachiyomisy.svg?maxAge=3600&label=download)](https://github.com/jobobby04/tachiyomisy/releases/latest) | [![Discord](https://img.shields.io/discord/349436576037732353.svg)](https://discord.gg/tachiyomi) |
 
 
-# ![app icon](./.github/readme-images/app-icon.png)TachiyomiSY
-Tachiyomi is a free and open source manga reader for Android 5.0 and above. This version of Tachiyomi, TachiyomiSY was based off TachiyomiAZ. This version is meant to push forward in the ways of usability and features. TachiyomiSY tries to push forward where it can, but staying in a place where it can easily grab updates and features from the main app, it tries to make new features, or take features from other forks like J2K and Neko.
+# Komik
+Komik is a free and open source manga reader for Android 5.0 and above, based on Tachiyomi.
 
 ![screenshots of app](./.github/readme-images/screens.png)
 
 ## Features
 
-Features of Tachiyomi(original) include:
+Features of Tachiyomi (original) include:
 * Online reading from sources such as MangaDex, MangaSee, Mangakakalot, [and more](https://github.com/tachiyomiorg/tachiyomi-extensions)
 * Local reading of downloaded manga
 * A configurable reader with multiple viewers, reading directions and other settings.
@@ -20,7 +20,7 @@ Features of Tachiyomi(original) include:
 * Schedule updating your library for new chapters
 * Create backups locally to read offline or to your desired cloud service
 
-Features of TachiyomiSY include:
+Features of Komik include:
 * Latest tab, store up to 5 sources where you can easily view the latest manga by viewing the tab
 * Automatic webtoon detection, allowing the reader to switch to webtoon mode automatically when viewing one
 * Manga recommendations, uses MAL and Anilist, as well as Neko Similar Manga for Mangadex manga(Thanks to Az, She11Shocked, Carlos, and Goldbattle)
@@ -65,54 +65,3 @@ Additional features for some extensions, features include custom description, op
 * PervEden (EN and IT)
 * Puruin
 * Tsumino
-
-## Download
-Get the app from our [releases page](https://github.com/jobobby04/tachiyomisy/releases/latest).
-
-If you want to try new features before they get to the stable release, you can download the preview version [here](https://github.com/jobobby04/tachiyomisypreview/releases).
-
-## Issues, Feature Requests and Contributing
-
-Please make sure to read the full guidelines. Your issue may be closed without warning if you do not.
-
-<details><summary>Issues</summary>
-
-1. **Before reporting a new issue, take a look at the [FAQ](https://tachiyomi.org/help/faq/), the [changelog](https://github.com/jobobby04/tachiyomisy/releases) and the already opened [issues](https://github.com/jobobby04/tachiyomisy/issues).**
-2. If you are unsure, ask here: [![Discord](https://img.shields.io/discord/349436576037732353.svg)](https://discord.gg/tachiyomi)
-
-</details>
-
-<details><summary>Bugs</summary>
-
-* Include version (More > About > Version)
- * If not latest, try updating, it may have already been solved
- * Preview version is equal to the number of commits as seen in the main page
-* Include steps to reproduce (if not obvious from description)
-* Include screenshot (if needed)
-* If it could be device-dependent, try reproducing on another device (if possible)
-* For large logs use http://pastebin.com/ (or similar)
-* Don't group unrelated requests into one issue
-
-DO: https://github.com/tachiyomiorg/tachiyomi/issues/24 https://github.com/tachiyomiorg/tachiyomi/issues/71
-
-DON'T: https://github.com/tachiyomiorg/tachiyomi/issues/75
-
-</details>
-
-<details><summary>Feature Requests</summary>
-
-* Write a detailed issue, explaining what it should do or how. Avoid writing just "like X app does"
-* Include screenshot (if needed)
-
-Source requests should be created at https://github.com/tachiyomiorg/tachiyomi-extensions, they do not belong in this repository.
-</details>
-
-<details><summary>Contributing</summary>
-
-See [CONTRIBUTING.md](https://github.com/tachiyomiorg/tachiyomi/blob/master/CONTRIBUTING.md).
-</details>
-
-## FAQ
-
-[See our website.](https://tachiyomi.org/)
-You can also reach out to us on [Discord](https://discord.gg/tachiyomi).
