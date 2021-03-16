@@ -53,8 +53,8 @@
     <string name="action_mark_previous_as_read">Mark previous as read</string>
     <string name="action_download">Download</string>
     <string name="action_download_unread">Download unread chapters</string>
-    <string name="action_bookmark">Bookmark</string>
-    <string name="action_remove_bookmark">Unbookmark</string>
+    <string name="action_bookmark">Bookmark chapter</string>
+    <string name="action_remove_bookmark">Unbookmark chapter</string>
     <string name="action_delete">Delete</string>
     <string name="action_update">Update</string>
     <string name="action_update_library">Update library</string>
@@ -158,8 +158,6 @@
     <string name="theme_dark_default">Default</string>
     <string name="theme_dark_blue">Dark blue</string>
     <string name="theme_dark_amoled">AMOLED black</string>
-    <string name="theme_dark_red">Black-Red</string>
-    <string name="theme_dark_midnightdusk">Midnight Dusk</string>
     <string name="pref_start_screen">Start screen</string>
     <string name="pref_language">Language</string>
     <string name="system_default">Default</string>
@@ -253,6 +251,8 @@
       <!-- Reader section -->
     <string name="pref_fullscreen">Fullscreen</string>
     <string name="pref_dual_page_split">Dual page split (ALPHA)</string>
+    <string name="pref_dual_page_invert">Invert dual page split placement</string>
+    <string name="pref_dual_page_invert_summary">If the placement of the dual page split doesn\'t match reading direction</string>
     <string name="pref_cutout_short">Show content in cutout area</string>
     <string name="pref_lock_orientation">Lock orientation</string>
     <string name="pref_page_transitions">Animate page transitions</string>
@@ -260,6 +260,10 @@
     <string name="pref_show_page_number">Show page number</string>
     <string name="pref_show_reading_mode">Show reading mode</string>
     <string name="pref_show_reading_mode_summary">Briefly show current mode when reader is opened</string>
+    <string name="pref_show_vert_seekbar_landscape">Show vertical seekbar in landscape</string>
+    <string name="pref_show_vert_seekbar_landscape_summary">Enables vertical seekbar when in landscape</string>
+    <string name="pref_left_handed_vertical_seekbar">Left-handed vertical seekbar</string>
+    <string name="pref_left_handed_vertical_seekbar_summary">Switches which side the seekbar is on</string>
     <string name="pref_true_color">32-bit color</string>
     <string name="pref_true_color_summary">Reduces banding, but impacts performance</string>
     <string name="pref_crop_borders">Crop borders</string>

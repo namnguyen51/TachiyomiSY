@@ -26,6 +26,8 @@ class WebtoonConfig(
         private set
 
     // SY -->
+    var usePageTransitions = false
+
     var enableZoomOut = false
         private set
 
@@ -48,12 +50,21 @@ class WebtoonConfig(
         preferences.webtoonNavInverted()
             .register({ tappingInverted = it }, { navigator.invertMode = it })
 
+        preferences.dualPageSplitWebtoon()
+            .register({ dualPageSplit = it }, { imagePropertyChangedListener?.invoke() })
+
+        preferences.dualPageInvertWebtoon()
+            .register({ dualPageInvert = it }, { imagePropertyChangedListener?.invoke() })
+
         // SY -->
         preferences.webtoonEnableZoomOut()
             .register({ enableZoomOut = it }, { zoomPropertyChangedListener?.invoke(it) })
 
         preferences.cropBordersContinuesVertical()
             .register({ continuesCropBorders = it }, { imagePropertyChangedListener?.invoke() })
+
+        preferences.pageTransitionsWebtoon()
+            .register({ usePageTransitions = it }, { imagePropertyChangedListener?.invoke() })
         // SY <--
     }
 

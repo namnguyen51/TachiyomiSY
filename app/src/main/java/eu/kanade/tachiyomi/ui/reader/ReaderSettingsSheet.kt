@@ -6,14 +6,17 @@ import android.widget.Spinner
 import androidx.annotation.ArrayRes
 import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
+import androidx.lifecycle.lifecycleScope
 import com.tfcporciuncula.flow.Preference
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
+import eu.kanade.tachiyomi.data.preference.asImmediateFlow
 import eu.kanade.tachiyomi.databinding.ReaderSettingsSheetBinding
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.PagerViewer
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonViewer
 import eu.kanade.tachiyomi.widget.IgnoreFirstSpinnerListener
 import eu.kanade.tachiyomi.widget.sheet.BaseBottomSheetDialog
+import kotlinx.coroutines.flow.launchIn
 import uy.kohesive.injekt.injectLazy
 
 /**
@@ -64,12 +67,12 @@ class ReaderSettingsSheet(private val activity: ReaderActivity) : BaseBottomShee
         binding.rotationMode.bindToPreference(preferences.rotation(), 1)
         binding.backgroundColor.bindToIntPreference(preferences.readerTheme(), R.array.reader_themes_values)
         binding.showPageNumber.bindToPreference(preferences.showPageNumber())
+        binding.landscapeVerticalSeekbar.bindToPreference(preferences.landscapeVerticalSeekbar())
+        binding.leftVerticalSeekbar.bindToPreference(preferences.leftVerticalSeekbar())
         binding.fullscreen.bindToPreference(preferences.fullscreen())
-        binding.dualPageSplit.bindToPreference(preferences.dualPageSplit())
         binding.keepscreen.bindToPreference(preferences.keepScreenOn())
         binding.longTap.bindToPreference(preferences.readWithLongTap())
         binding.alwaysShowChapterTransition.bindToPreference(preferences.alwaysShowChapterTransition())
-        binding.pageTransitions.bindToPreference(preferences.pageTransitions())
         // SY -->
         binding.autoWebtoonMode.bindToPreference(preferences.useAutoWebtoon())
         // SY <--
@@ -96,6 +99,17 @@ class ReaderSettingsSheet(private val activity: ReaderActivity) : BaseBottomShee
         binding.pagerPrefsGroup.scaleType.bindToPreference(preferences.imageScaleType(), 1)
         binding.pagerPrefsGroup.zoomStart.bindToPreference(preferences.zoomStart(), 1)
         binding.pagerPrefsGroup.cropBorders.bindToPreference(preferences.cropBorders())
+
+        // SY -->
+        binding.pagerPrefsGroup.pageTransitionsPager.bindToPreference(preferences.pageTransitionsPager())
+        // SY <--
+
+        // Makes so that dual page invert gets hidden away when turning of dual page split
+        binding.dualPageSplit.bindToPreference(preferences.dualPageSplitPaged())
+        preferences.dualPageSplitPaged()
+            .asImmediateFlow { binding.dualPageInvert.isVisible = it }
+            .launchIn(activity.lifecycleScope)
+        binding.dualPageInvert.bindToPreference(preferences.dualPageInvertPaged())
     }
 
     /**
@@ -116,7 +130,15 @@ class ReaderSettingsSheet(private val activity: ReaderActivity) : BaseBottomShee
         // SY -->
         binding.webtoonPrefsGroup.zoomOutWebtoon.bindToPreference(preferences.webtoonEnableZoomOut())
         binding.webtoonPrefsGroup.cropBordersContinuesVertical.bindToPreference(preferences.cropBordersContinuesVertical())
+        binding.webtoonPrefsGroup.pageTransitionsWebtoon.bindToPreference(preferences.pageTransitionsWebtoon())
         // SY <--
+
+        // Makes so that dual page invert gets hidden away when turning of dual page split
+        binding.dualPageSplit.bindToPreference(preferences.dualPageSplitWebtoon())
+        preferences.dualPageSplitWebtoon()
+            .asImmediateFlow { binding.dualPageInvert.isVisible = it }
+            .launchIn(activity.lifecycleScope)
+        binding.dualPageInvert.bindToPreference(preferences.dualPageInvertWebtoon())
     }
 
     /**

@@ -4,12 +4,12 @@ import android.app.Dialog
 import android.os.Bundle
 import android.view.View
 import com.afollestad.materialdialogs.MaterialDialog
-import com.elvishew.xlog.XLog
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.base.controller.DialogController
 import eu.kanade.tachiyomi.util.lang.launchIO
 import eu.kanade.tachiyomi.util.lang.launchUI
 import eu.kanade.tachiyomi.util.system.toast
+import exh.log.xLogE
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 
@@ -23,7 +23,7 @@ class ConfiguringDialogController : DialogController() {
                 try {
                     EHConfigurator(activity!!).configureAll()
                     launchUI {
-                        activity?.toast(activity?.getString(R.string.eh_settings_successfully_uploaded))
+                        activity?.toast(R.string.eh_settings_successfully_uploaded)
                     }
                 } catch (e: Exception) {
                     launchUI {
@@ -35,7 +35,7 @@ class ConfiguringDialogController : DialogController() {
                                 .show()
                         }
                     }
-                    XLog.tag("ConfiguringDialogController").enableStackTrace(2).e("Configuration error!", e)
+                    xLogE("Configuration error!", e)
                 }
                 launchUI {
                     finish()

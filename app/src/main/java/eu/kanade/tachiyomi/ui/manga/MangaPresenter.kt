@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
-import com.elvishew.xlog.XLog
 import com.jakewharton.rxrelay.PublishRelay
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.cache.CoverCache
@@ -46,6 +45,7 @@ import eu.kanade.tachiyomi.util.updateCoverLastModified
 import eu.kanade.tachiyomi.widget.ExtendedNavigationView.Item.TriStateGroup.State
 import exh.debug.DebugToggles
 import exh.eh.EHentaiUpdateHelper
+import exh.log.xLogD
 import exh.md.utils.FollowStatus
 import exh.md.utils.MdUtil
 import exh.md.utils.scanlatorList
@@ -236,7 +236,7 @@ class MangaPresenter(
                                 // Redirect if we are not the accepted root
                                 if (manga.id != acceptedChain.manga.id && acceptedChain.manga.favorite) {
                                     // Update if any of our chapters are not in accepted manga's chapters
-                                    XLog.disableStackTrace().d("Found accepted manga ${manga.url}")
+                                    xLogD("Found accepted manga %s", manga.url)
                                     val ourChapterUrls = chapters.map { it.url }.toSet()
                                     val acceptedChapterUrls = acceptedChain.chapters.map { it.url }.toSet()
                                     val update = (ourChapterUrls - acceptedChapterUrls).isNotEmpty()
@@ -314,11 +314,13 @@ class MangaPresenter(
 
     // SY -->
     fun updateMangaInfo(
+        context: Context,
         title: String?,
         author: String?,
         artist: String?,
         description: String?,
         tags: List<String>?,
+        status: Int?,
         uri: Uri?,
         resetCover: Boolean = false
     ) {
@@ -329,7 +331,8 @@ class MangaPresenter(
             manga.description = description?.trimOrNull()
             val tagsString = tags?.joinToString()
             manga.genre = if (tags.isNullOrEmpty()) null else tagsString?.trim()
-            LocalSource(downloadManager.context).updateMangaInfo(manga)
+            manga.status = status ?: 0
+            (sourceManager.get(LocalSource.ID) as LocalSource).updateMangaInfo(manga)
             db.updateMangaInfo(manga).executeAsBlocking()
         } else {
             val genre = if (!tags.isNullOrEmpty() && tags.joinToString() != manga.originalGenre) {
@@ -343,13 +346,14 @@ class MangaPresenter(
                 author?.trimOrNull(),
                 artist?.trimOrNull(),
                 description?.trimOrNull(),
-                genre
+                genre,
+                status.takeUnless { it == manga.originalStatus }
             )
             customMangaManager.saveMangaInfo(manga)
         }
 
         if (uri != null) {
-            editCoverWithStream(uri)
+            editCoverWithStream(context, uri)
         } else if (resetCover) {
             coverCache.deleteCustomCover(manga)
             manga.updateCoverLastModified(db)
@@ -377,11 +381,14 @@ class MangaPresenter(
         }
     }
 
-    fun editCoverWithStream(uri: Uri): Boolean {
-        val inputStream = downloadManager.context.contentResolver.openInputStream(uri) ?: return false
+    fun editCoverWithStream(context: Context, uri: Uri): Boolean {
+        val inputStream = context.contentResolver.openInputStream(uri) ?: return false
         if (manga.source == LocalSource.ID) {
-            LocalSource.updateCover(downloadManager.context, manga, inputStream)
-            manga.updateCoverLastModified(db)
+            val cover = LocalSource.updateCover(context, manga, inputStream)
+            if (manga.thumbnail_url.isNullOrBlank() && cover != null) {
+                manga.thumbnail_url = cover.absolutePath
+                db.updateMangaThumbnail(manga).executeAsBlocking()
+            }
             return true
         }
 
@@ -535,32 +542,23 @@ class MangaPresenter(
         // I cant find any way to call the chapter list subscription to get the chapters again
     }
 
-    fun shareCover(context: Context): File? {
-        return try {
-            val destDir = File(context.cacheDir, "shared_image")
-            val file = saveCover(destDir)
-            file
-        } catch (e: Exception) {
-            null
-        }
+    fun shareCover(context: Context): File {
+        val destDir = File(context.cacheDir, "shared_image")
+        return saveCover(destDir)
     }
 
-    fun saveCover(context: Context): Boolean {
-        return try {
-            val directory = File(
-                Environment.getExternalStorageDirectory().absolutePath +
-                    File.separator + Environment.DIRECTORY_PICTURES +
-                    File.separator + context.getString(R.string.app_name)
-            )
-            saveCover(directory)
-            true
-        } catch (e: Exception) {
-            false
-        }
+    fun saveCover(context: Context) {
+        val directory = File(
+            Environment.getExternalStorageDirectory().absolutePath +
+                File.separator + Environment.DIRECTORY_PICTURES +
+                File.separator + context.getString(R.string.app_name)
+        )
+        saveCover(directory)
     }
 
     private fun saveCover(directory: File): File {
-        val cover = coverCache.getCoverFile(manga)!!
+        val cover = coverCache.getCoverFile(manga) ?: throw Exception("Cover url was null")
+        if (!cover.exists()) throw Exception("Cover not in cache")
         val type = ImageUtil.findImageType(cover.inputStream())
             ?: throw Exception("Not an image")
 
@@ -1172,6 +1170,7 @@ class MangaPresenter(
 
                     withUIContext { view?.onTrackingRefreshDone() }
                 } catch (e: Throwable) {
+                    xLogD("Error registering tracking", e)
                     withUIContext { view?.onTrackingRefreshError(e) }
                 }
             }
@@ -1185,6 +1184,7 @@ class MangaPresenter(
                 val results = service.search(query)
                 withUIContext { view?.onTrackingSearchResults(results) }
             } catch (e: Throwable) {
+                xLogD("Error searching tracking", e)
                 withUIContext { view?.onTrackingSearchResultsError(e) }
             }
         }
@@ -1198,6 +1198,7 @@ class MangaPresenter(
                     service.bind(item)
                     db.insertTrack(item).executeAsBlocking()
                 } catch (e: Throwable) {
+                    xLogD("Error registering tracking", e)
                     withUIContext { view?.applicationContext?.toast(e.message) }
                 }
             }
@@ -1217,6 +1218,7 @@ class MangaPresenter(
                 db.insertTrack(track).executeAsBlocking()
                 withUIContext { view?.onTrackingRefreshDone() }
             } catch (e: Throwable) {
+                xLogD("Error updating tracking", e)
                 withUIContext { view?.onTrackingRefreshError(e) }
 
                 // Restart on error to set old values

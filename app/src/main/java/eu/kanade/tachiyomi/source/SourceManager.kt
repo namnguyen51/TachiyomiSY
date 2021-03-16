@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.source
 
 import android.content.Context
-import com.elvishew.xlog.XLog
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.source.model.Page
@@ -16,9 +15,9 @@ import eu.kanade.tachiyomi.source.online.all.NHentai
 import eu.kanade.tachiyomi.source.online.all.PervEden
 import eu.kanade.tachiyomi.source.online.english.EightMuses
 import eu.kanade.tachiyomi.source.online.english.HBrowse
-import eu.kanade.tachiyomi.source.online.english.HentaiCafe
 import eu.kanade.tachiyomi.source.online.english.Pururin
 import eu.kanade.tachiyomi.source.online.english.Tsumino
+import exh.log.xLogD
 import exh.source.BlacklistedSources
 import exh.source.DelegatedHttpSource
 import exh.source.EH_SOURCE_ID
@@ -26,7 +25,6 @@ import exh.source.EIGHTMUSES_SOURCE_ID
 import exh.source.EXH_SOURCE_ID
 import exh.source.EnhancedHttpSource
 import exh.source.HBROWSE_SOURCE_ID
-import exh.source.HENTAI_CAFE_SOURCE_ID
 import exh.source.PERV_EDEN_EN_SOURCE_ID
 import exh.source.PERV_EDEN_IT_SOURCE_ID
 import exh.source.PURURIN_SOURCE_ID
@@ -115,7 +113,7 @@ open class SourceManager(private val context: Context) {
             } else DELEGATED_SOURCES[sourceQName]
         } else null
         val newSource = if (source is HttpSource && delegate != null) {
-            XLog.tag("SourceManager").d("Delegating source: %s -> %s!", sourceQName, delegate.newSourceClass.qualifiedName)
+            xLogD("Delegating source: %s -> %s!", sourceQName, delegate.newSourceClass.qualifiedName)
             val enhancedSource = EnhancedHttpSource(
                 source,
                 delegate.newSourceClass.constructors.find { it.parameters.size == 2 }!!.call(source, context)
@@ -132,7 +130,7 @@ open class SourceManager(private val context: Context) {
         } else source
 
         if (source.id in BlacklistedSources.BLACKLISTED_EXT_SOURCES) {
-            XLog.tag("SourceManager").d("Removing blacklisted source: (id: %s, name: %s, lang: %s)!", source.id, source.name, (source as? CatalogueSource)?.lang)
+            xLogD("Removing blacklisted source: (id: %s, name: %s, lang: %s)!", source.id, source.name, (source as? CatalogueSource)?.lang)
             return
         }
         // EXH <--
@@ -155,13 +153,12 @@ open class SourceManager(private val context: Context) {
 
     // SY -->
     private fun createEHSources(): List<Source> {
-        val exSrcs = mutableListOf<HttpSource>(
+        val sources = listOf<HttpSource>(
             EHentai(EH_SOURCE_ID, false, context)
         )
-        if (prefs.enableExhentai().get()) {
-            exSrcs += EHentai(EXH_SOURCE_ID, true, context)
-        }
-        return exSrcs
+        return if (prefs.enableExhentai().get()) {
+            sources + EHentai(EXH_SOURCE_ID, true, context)
+        } else sources
     }
     // SY <--
 
@@ -196,12 +193,6 @@ open class SourceManager(private val context: Context) {
         private const val fillInSourceId = Long.MAX_VALUE
         val DELEGATED_SOURCES = listOf(
             DelegatedSource(
-                "Hentai Cafe",
-                HENTAI_CAFE_SOURCE_ID,
-                "eu.kanade.tachiyomi.extension.all.foolslide.HentaiCafe",
-                HentaiCafe::class
-            ),
-            DelegatedSource(
                 "Pururin",
                 PURURIN_SOURCE_ID,
                 "eu.kanade.tachiyomi.extension.en.pururin.Pururin",
@@ -229,7 +220,7 @@ open class SourceManager(private val context: Context) {
             DelegatedSource(
                 "8Muses",
                 EIGHTMUSES_SOURCE_ID,
-                "eu.kanade.tachiyomi.extension.all.eromuse.EroMuse",
+                "eu.kanade.tachiyomi.extension.en.eightmuses.EightMuses",
                 EightMuses::class
             ),
             DelegatedSource(

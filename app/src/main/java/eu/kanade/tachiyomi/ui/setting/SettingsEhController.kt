@@ -11,8 +11,6 @@ import com.afollestad.materialdialogs.actions.setActionButtonEnabled
 import com.afollestad.materialdialogs.customview.customView
 import com.afollestad.materialdialogs.input.getInputField
 import com.afollestad.materialdialogs.input.input
-import com.bluelinelabs.conductor.RouterTransaction
-import com.bluelinelabs.conductor.changehandler.FadeChangeHandler
 import com.tfcporciuncula.flow.Preference
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.DatabaseHelper
@@ -21,6 +19,7 @@ import eu.kanade.tachiyomi.data.preference.PreferenceKeys
 import eu.kanade.tachiyomi.data.preference.asImmediateFlow
 import eu.kanade.tachiyomi.databinding.EhDialogCategoriesBinding
 import eu.kanade.tachiyomi.databinding.EhDialogLanguagesBinding
+import eu.kanade.tachiyomi.ui.base.controller.withFadeTransaction
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import eu.kanade.tachiyomi.util.preference.defaultValue
 import eu.kanade.tachiyomi.util.preference.entriesRes
@@ -45,6 +44,7 @@ import exh.metadata.metadata.base.getFlatMetadataForManga
 import exh.source.isEhBasedManga
 import exh.uconfig.WarnConfigureDialogController
 import exh.ui.login.LoginController
+import exh.util.executeOnIO
 import exh.util.floor
 import exh.util.nullIfBlank
 import exh.util.trans
@@ -111,11 +111,7 @@ class SettingsEhController : SettingsController() {
                         preferences.enableExhentai().set(false)
                         true
                     } else {
-                        router.pushController(
-                            RouterTransaction.with(LoginController())
-                                .pushChangeHandler(FadeChangeHandler())
-                                .popChangeHandler(FadeChangeHandler())
-                        )
+                        router.pushController(LoginController().withFadeTransaction())
                         false
                     }
                 }
@@ -640,10 +636,10 @@ class SettingsEhController : SettingsController() {
                                 context.getString(R.string.gallery_updater_stats_text, getRelativeTimeString(getRelativeTimeFromNow(stats.startTime.milliseconds), context), stats.updateCount, stats.possibleUpdates)
                             } else context.getString(R.string.gallery_updater_not_ran_yet)
 
-                            val allMeta = db.getFavoriteMangaWithMetadata().executeAsBlocking()
+                            val allMeta = db.getFavoriteMangaWithMetadata().executeOnIO()
                                 .filter(Manga::isEhBasedManga)
                                 .mapNotNull {
-                                    db.getFlatMetadataForManga(it.id!!).executeAsBlocking()
+                                    db.getFlatMetadataForManga(it.id!!).executeOnIO()
                                         ?.raise<EHentaiSearchMetadata>()
                                 }.toList()
 

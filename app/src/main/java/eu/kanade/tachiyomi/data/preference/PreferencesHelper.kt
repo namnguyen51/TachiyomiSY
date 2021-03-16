@@ -83,13 +83,21 @@ class PreferencesHelper(val context: Context) {
 
     fun rotation() = flowPrefs.getInt(Keys.rotation, 1)
 
-    fun pageTransitions() = flowPrefs.getBoolean(Keys.enableTransitions, true)
+    fun pageTransitionsPager() = flowPrefs.getBoolean(Keys.enableTransitionsPager, true)
+
+    fun pageTransitionsWebtoon() = flowPrefs.getBoolean(Keys.enableTransitionsWebtoon, true)
 
     fun doubleTapAnimSpeed() = flowPrefs.getInt(Keys.doubleTapAnimationSpeed, 500)
 
     fun showPageNumber() = flowPrefs.getBoolean(Keys.showPageNumber, true)
 
-    fun dualPageSplit() = flowPrefs.getBoolean(Keys.dualPageSplit, false)
+    fun dualPageSplitPaged() = flowPrefs.getBoolean(Keys.dualPageSplitPaged, false)
+
+    fun dualPageSplitWebtoon() = flowPrefs.getBoolean(Keys.dualPageSplitWebtoon, false)
+
+    fun dualPageInvertPaged() = flowPrefs.getBoolean(Keys.dualPageInvertPaged, false)
+
+    fun dualPageInvertWebtoon() = flowPrefs.getBoolean(Keys.dualPageInvertWebtoon, false)
 
     fun showReadingMode() = prefs.getBoolean(Keys.showReadingMode, true)
 
@@ -456,4 +464,8 @@ class PreferencesHelper(val context: Context) {
     fun extensionRepos() = flowPrefs.getStringSet(Keys.extensionRepos, emptySet())
 
     fun cropBordersContinuesVertical() = flowPrefs.getBoolean(Keys.cropBordersContinuesVertical, false)
+
+    fun landscapeVerticalSeekbar() = flowPrefs.getBoolean(Keys.landscapeVerticalSeekbar, false)
+
+    fun leftVerticalSeekbar() = flowPrefs.getBoolean(Keys.leftVerticalSeekbar, false)
 }

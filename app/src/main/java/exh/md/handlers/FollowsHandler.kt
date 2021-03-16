@@ -1,6 +1,5 @@
 package exh.md.handlers
 
-import com.elvishew.xlog.XLog
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.TrackManager
@@ -12,12 +11,15 @@ import eu.kanade.tachiyomi.source.model.MangasPage
 import eu.kanade.tachiyomi.source.model.MetadataMangasPage
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.util.lang.withIOContext
+import exh.log.xLogD
+import exh.log.xLogE
 import exh.md.handlers.serializers.FollowPage
 import exh.md.handlers.serializers.FollowsIndividualSerializer
 import exh.md.handlers.serializers.FollowsPageSerializer
 import exh.md.utils.FollowStatus
 import exh.md.utils.MdUtil
 import exh.metadata.metadata.MangaDexSearchMetadata
+import exh.util.awaitResponse
 import exh.util.floor
 import kotlinx.serialization.decodeFromString
 import okhttp3.CacheControl
@@ -26,6 +28,7 @@ import okhttp3.Headers
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import okio.EOFException
 
 class FollowsHandler(val client: OkHttpClient, val headers: Headers, val preferences: PreferencesHelper, private val useLowQualityCovers: Boolean) {
 
@@ -50,7 +53,7 @@ class FollowsHandler(val client: OkHttpClient, val headers: Headers, val prefere
                 response.body?.string().orEmpty()
             )
         } catch (e: Exception) {
-            XLog.tag("FollowsHandler").enableStackTrace(2).e("error parsing follows", e)
+            xLogE("error parsing follows", e)
             FollowsPageSerializer(404, emptyList())
         }
 
@@ -73,24 +76,19 @@ class FollowsHandler(val client: OkHttpClient, val headers: Headers, val prefere
     /**
      * fetch follow status used when fetching status for 1 manga
      */
-
     private fun followStatusParse(response: Response): Track {
         val followsPageResult = try {
             response.parseAs<FollowsIndividualSerializer>(MdUtil.jsonParser)
         } catch (e: Exception) {
-            XLog.tag("FollowsHandler").enableStackTrace(2).e("error parsing follows", e)
+            xLogE("error parsing follows", e)
             throw e
-        }
-
-        if (followsPageResult.data == null) {
-            throw Exception("Invalid response  ${followsPageResult.code}")
         }
 
         val track = Track.create(TrackManager.MDLIST)
         if (followsPageResult.code == 404) {
             track.status = FollowStatus.UNFOLLOWED.int
         } else {
-            val follow = followsPageResult.data
+            val follow = followsPageResult.data ?: throw Exception("Invalid response ${followsPageResult.code}")
             track.status = follow.followType
             if (follow.chapter.isNotBlank()) {
                 track.last_chapter_read = follow.chapter.toFloat().floor()
@@ -151,7 +149,7 @@ class FollowsHandler(val client: OkHttpClient, val headers: Headers, val prefere
                         .await()
                 }
 
-            withIOContext { response.body?.string().isNullOrEmpty() }
+            response.succeeded()
         }
     }
 
@@ -161,7 +159,7 @@ class FollowsHandler(val client: OkHttpClient, val headers: Headers, val prefere
             val formBody = FormBody.Builder()
                 .add("volume", "0")
                 .add("chapter", track.last_chapter_read.toString())
-            XLog.tag("FollowsHandler").d("chapter to update %s", track.last_chapter_read.toString())
+            xLogD("chapter to update %s", track.last_chapter_read.toString())
             val response = client.newCall(
                 POST(
                     "${MdUtil.baseUrl}/ajax/actions.ajax.php?function=edit_progress&id=$mangaID",
@@ -170,11 +168,7 @@ class FollowsHandler(val client: OkHttpClient, val headers: Headers, val prefere
                 )
             ).await()
 
-            withIOContext {
-                response.body?.string()
-                    .also { XLog.tag("FollowsHandler").d(it) }
-                    .let { it != null && it.isEmpty() }
-            }
+            response.succeeded()
         }
     }
 
@@ -186,10 +180,21 @@ class FollowsHandler(val client: OkHttpClient, val headers: Headers, val prefere
                     "${MdUtil.baseUrl}/ajax/actions.ajax.php?function=manga_rating&id=$mangaID&rating=${track.score.toInt()}",
                     headers
                 )
-            )
-                .await()
+            ).await()
 
-            withIOContext { response.body?.string().isNullOrEmpty() }
+            response.succeeded()
+        }
+    }
+
+    private suspend fun Response.succeeded() = withIOContext {
+        try {
+            body?.string().let { body ->
+                (body != null && body.isEmpty()).also {
+                    if (!it) xLogD(body)
+                }
+            }
+        } catch (e: EOFException) {
+            true
         }
     }
 
@@ -198,15 +203,11 @@ class FollowsHandler(val client: OkHttpClient, val headers: Headers, val prefere
      */
     suspend fun fetchAllFollows(forceHd: Boolean): List<Pair<SManga, MangaDexSearchMetadata>> {
         return withIOContext {
-            val listManga = mutableListOf<Pair<SManga, MangaDexSearchMetadata>>()
             val response = client.newCall(followsListRequest()).await()
             val mangasPage = followsParseMangaPage(response, forceHd)
-            listManga.addAll(
-                mangasPage.mangas.mapIndexed { index, sManga ->
-                    sManga to mangasPage.mangasMetadata[index] as MangaDexSearchMetadata
-                }
-            )
-            listManga
+            mangasPage.mangas.mapIndexed { index, sManga ->
+                sManga to mangasPage.mangasMetadata[index] as MangaDexSearchMetadata
+            }
         }
     }
 
@@ -217,16 +218,8 @@ class FollowsHandler(val client: OkHttpClient, val headers: Headers, val prefere
                 headers,
                 CacheControl.FORCE_NETWORK
             )
-            try {
-                val response = client.newCall(request).await()
-                followStatusParse(response)
-            } catch (e: Exception) {
-                if (e.message.equals("HTTP error 404", true)) {
-                    Track.create(TrackManager.MDLIST).apply {
-                        status = FollowStatus.UNFOLLOWED.int
-                    }
-                } else throw e
-            }
+            val response = client.newCall(request).awaitResponse()
+            followStatusParse(response)
         }
     }
 }
